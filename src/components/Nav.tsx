@@ -8,8 +8,8 @@ export const Nav: FC = () => {
   return (
     <NavWrapper>
       <Link href='/'>Inici</Link>
-      <Link href='/tasks'>Veure tasques</Link>
-      <Link href='/counter'>Veure comptador</Link>
+      <Link href='/tasks'> Tasques</Link>
+      <Link href='/counter'>Comptador</Link>
     </NavWrapper>
   )
 }
@@ -22,7 +22,7 @@ const NavWrapper = styled.nav`
     flex-direction: row;
     gap: 20px;
     background-color: var(--foreground);
-    padding: 20px 60px;
+    padding: 20px;
     width: 100vw;
     width: 100dvw;
     height: 60px;
