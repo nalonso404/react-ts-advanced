@@ -76,7 +76,7 @@ const CounterWrapper = styled.div`
 	display:flex;
 	flex-direction: column;
 	gap: 20px;
-	min-width: 390px;
+	min-width: 350px;
 
 	> form {
 		display: flex;
