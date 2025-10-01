@@ -1,18 +1,19 @@
 'use client'
+
 import { FC, useReducer, useRef, useState, useEffect } from 'react'
 import styled from 'styled-components'
 
-type TypeTask = { title: string; completed: boolean; id: string }
+type TypeTask = { title: string; completed: boolean; id: string };
 
 type TaskAction = {
-  tasks?: TypeTask[]
-  type: string
-  title?: string
-  completed?: boolean
-  id?: string
-}
+  tasks?: TypeTask[];
+  type: string;
+  title?: string;
+  completed?: boolean;
+  id?: string;
+};
 
-const Task: FC<{ data: TypeTask, state: 'edit' | 'only-read', dispatch: React.Dispatch<TaskAction>, setTaskState: React.Dispatch<React.SetStateAction<'edit' | 'only-read'>> }> = ({ data, state, dispatch, setTaskState }) => {
+const Task: FC<{   data: TypeTask, state: 'edit' | 'only-read', dispatch: React.Dispatch<TaskAction>, setTaskState: React.Dispatch<React.SetStateAction<'edit' | 'only-read'>> }> = ({ data, state, dispatch, setTaskState }) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleEdit = (e: React.FormEvent) => {
@@ -25,7 +26,14 @@ const Task: FC<{ data: TypeTask, state: 'edit' | 'only-read', dispatch: React.Di
   return (
     <>
       {state === 'edit' ? (
-        <Input type="text" id={data.id} name="task" ref={inputRef} onChange={handleEdit} onBlur={() => setTaskState('only-read')}/>
+        <Input
+          type='text'
+          id={data.id}
+          name='task'
+          ref={inputRef}
+          onChange={handleEdit}
+          onBlur={() => setTaskState('only-read')}
+        />
       ) : (
         <span>{data.title}</span>
       )}
@@ -38,24 +46,25 @@ let nextId = 0
 export const Tasks: FC = () => {
   const inputRef = useRef<HTMLInputElement>(null)
   const [taskState, setTaskState] = useState<'edit' | 'only-read'>('only-read')
+  const [hasMounted, setHasMounted] = useState(false)
 
   const reducer = (state: TypeTask[], action: TaskAction): TypeTask[] => {
     switch (action.type) {
       case 'add':
         return [
           ...state,
-          {
-            title: action.title ?? '',
-            completed: false,
-            id: `task-${nextId++}`
-          }
+          { title: action.title ?? '', completed: false, id: `task-${nextId++}` },
         ]
       case 'edit':
-        return state.map(t => (t.id === action.id ? { ...t, title: action.title ?? '' } : t))
+        return state.map((t) =>
+          t.id === action.id ? { ...t, title: action.title ?? '' } : t
+        )
       case 'complete':
-        return state.map(t => (t.id === action.id ? { ...t, completed: !t.completed } : t))
+        return state.map((t) =>
+          t.id === action.id ? { ...t, completed: !t.completed } : t
+        )
       case 'delete':
-        return state.filter(t => t.id !== action.id)
+        return state.filter((t) => t.id !== action.id)
       case 'load':
         return action.tasks || []
       default:
@@ -65,21 +74,28 @@ export const Tasks: FC = () => {
 
   const [task, dispatch] = useReducer(reducer, [])
 
+  // Load from localStorage only after mount
   useEffect(() => {
     const stored = localStorage.getItem('tasks')
     if (stored) {
       dispatch({ type: 'load', tasks: JSON.parse(stored) })
     }
+    setHasMounted(true)
   }, [])
 
+  // Save to localStorage whenever tasks change
   useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(task))
-  }, [task])
+    if (hasMounted) {
+      localStorage.setItem('tasks', JSON.stringify(task))
+    }
+  }, [task, hasMounted])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    dispatch({ type: 'add', title: inputRef.current?.value })
-    if (inputRef.current) inputRef.current.value = ''
+    if (inputRef.current && inputRef.current.value.trim()) {
+      dispatch({ type: 'add', title: inputRef.current.value })
+      inputRef.current.value = ''
+    }
   }
 
   const handleDelete = (id: string) => {
@@ -88,20 +104,32 @@ export const Tasks: FC = () => {
     }
   }
 
+  // Prevent hydration mismatch
+  if (!hasMounted) return null
+
   return (
     <div>
       <Form onSubmit={handleSubmit}>
-        <label htmlFor="task">Què he de fer avui?</label>
+        <label htmlFor='task'>Què he de fer avui?</label>
         <div>
-          <Input type="text" id="task" name="task" ref={inputRef} />
-          <button type="submit">Afegir</button>
+          <Input type='text' id='task' name='task' ref={inputRef} />
+          <button type='submit'>Afegir</button>
         </div>
       </Form>
 
       <Wrapper>
-        {task.map(t => (
+        {task.map((t) => (
           <div key={t.id}>
-            <input type="checkbox" checked={t.completed} onChange={() => dispatch({ type: 'complete', title: t.title, id: t.id, completed: t.completed })}/>
+            <input
+              type='checkbox' checked={t.completed} onChange={() =>
+                dispatch({
+                  type: 'complete',
+                  title: t.title,
+                  id: t.id,
+                  completed: t.completed,
+                })
+              }
+            />
             <Task data={t} state={taskState} dispatch={dispatch} setTaskState={setTaskState} />
             <button onClick={() => setTaskState('edit')}>Editar</button>
             <button onClick={() => handleDelete(t.id)}>Borrar</button>
@@ -148,9 +176,12 @@ const Form = styled.form`
 
 const Wrapper = styled.div`
   display: flex;
-  flex-direction: row;
-  gap: 16px;
+  flex-direction: column;
   flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin: 0 auto;
+  width: 90%;
 
   > div {
     align-items: center;
@@ -159,7 +190,6 @@ const Wrapper = styled.div`
     justify-content: space-between;
     gap: 8px;
     padding: 8px;
-    width: 100%;
   }
 
   button {
